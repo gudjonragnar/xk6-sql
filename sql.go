@@ -5,11 +5,7 @@ import (
 	dbsql "database/sql"
 	"fmt"
 
-	// Blank imports required for initialization of drivers
-	_ "github.com/denisenkom/go-mssqldb"
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
+	pg "github.com/lib/pq"
 	"go.k6.io/k6/js/modules"
 )
 
@@ -70,6 +66,14 @@ func (*SQL) Open(database string, connectionString string) (*dbsql.DB, error) {
 	}
 
 	return db, nil
+}
+
+func (sql *SQL) QueryArray1(db *dbsql.DB, query string, arr []interface{}, args ...interface{}) ([]KeyValue, error) {
+  results, err := sql.Query(db, query, pg.Array(arr), args...)
+  if err != nil {
+    return nil, err
+  }
+  return results, nil
 }
 
 // Query executes the provided query string against the database, while
