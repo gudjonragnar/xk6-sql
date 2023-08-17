@@ -8,7 +8,7 @@ import (
 
 	pg "github.com/lib/pq"
   _ "github.com/ClickHouse/clickhouse-go/v2"
-	"go.k6.io/k6/js/modules"
+  "go.k6.io/k6/js/modules"
 )
 
 func init() {
@@ -22,7 +22,7 @@ type RootModule struct{}
 // SQL represents an instance of the SQL module for every VU.
 type SQL struct {
 	vu modules.VU
-  driver string
+  Driver string
 }
 
 // Ensure the interfaces are implemented correctly.
@@ -62,7 +62,7 @@ func (sql *SQL) Open(database string, connectionString string) (*dbsql.DB, error
 	if !contains(supportedDatabases, database) {
 		return nil, fmt.Errorf("database %s is not supported", database)
 	}
-  sql.driver = database
+  sql.Driver = database
 	db, err := dbsql.Open(database, connectionString)
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (sql *SQL) Open(database string, connectionString string) (*dbsql.DB, error
 
 func (sql *SQL) QueryArray(db *dbsql.DB, query string, args ...interface{}) ([]KeyValue, error) {
   var us []interface{}
-  if sql.driver == "postgres" {
+  if sql.Driver == "postgres" {
     us = make([]interface{}, len(args))
     for i, v := range args {
       rt := reflect.TypeOf(v)
