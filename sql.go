@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	pg "github.com/lib/pq"
+  ch "github.com/ClickHouse/clickhouse-go/v2"
 	"go.k6.io/k6/js/modules"
 )
 
@@ -21,6 +22,7 @@ type RootModule struct{}
 // SQL represents an instance of the SQL module for every VU.
 type SQL struct {
 	vu modules.VU
+  driver string
 }
 
 // Ensure the interfaces are implemented correctly.
@@ -55,12 +57,12 @@ func contains(array []string, element string) bool {
 
 // Open establishes a connection to the specified database type using
 // the provided connection string.
-func (*SQL) Open(database string, connectionString string) (*dbsql.DB, error) {
-	supportedDatabases := []string{"mysql", "postgres", "sqlite3", "sqlserver"}
+func (sql *SQL) Open(database string, connectionString string) (*dbsql.DB, error) {
+	supportedDatabases := []string{"clickhouse", "postgres"}
 	if !contains(supportedDatabases, database) {
 		return nil, fmt.Errorf("database %s is not supported", database)
 	}
-
+  sql.driver = database
 	db, err := dbsql.Open(database, connectionString)
 	if err != nil {
 		return nil, err
@@ -71,17 +73,17 @@ func (*SQL) Open(database string, connectionString string) (*dbsql.DB, error) {
 
 func (sql *SQL) QueryArray(db *dbsql.DB, query string, args ...interface{}) ([]KeyValue, error) {
 	us := make([]interface{}, len(args))
-	for i, v := range args {
-		rt := reflect.TypeOf(v)
-		switch rt.Kind() {
-		case reflect.Array:
-			us[i] = pg.Array(v)
-		case reflect.Slice:
-			us[i] = pg.Array(v)
-		default:
-			us[i] = v
-		}
-	}
+  if sql.driver == "postgres" {
+    for i, v := range args {
+      rt := reflect.TypeOf(v)
+      switch rt.Kind() {
+      case reflect.Array, reflect.Slice:
+        us[i] = pg.Array(v)
+      default:
+        us[i] = v
+      }
+    }
+  }
 	results, err := sql.Query(db, query, us...)
 	if err != nil {
 		return nil, err
