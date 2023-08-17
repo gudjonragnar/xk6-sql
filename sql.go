@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	pg "github.com/lib/pq"
-  ch "github.com/ClickHouse/clickhouse-go/v2"
+  _ "github.com/ClickHouse/clickhouse-go/v2"
 	"go.k6.io/k6/js/modules"
 )
 
@@ -72,8 +72,9 @@ func (sql *SQL) Open(database string, connectionString string) (*dbsql.DB, error
 }
 
 func (sql *SQL) QueryArray(db *dbsql.DB, query string, args ...interface{}) ([]KeyValue, error) {
-	us := make([]interface{}, len(args))
+  var us []interface{}
   if sql.driver == "postgres" {
+    us = make([]interface{}, len(args))
     for i, v := range args {
       rt := reflect.TypeOf(v)
       switch rt.Kind() {
@@ -83,8 +84,10 @@ func (sql *SQL) QueryArray(db *dbsql.DB, query string, args ...interface{}) ([]K
         us[i] = v
       }
     }
+  } else {
+    us = args
   }
-	results, err := sql.Query(db, query, us...)
+  results, err := sql.Query(db, query, us...)
 	if err != nil {
 		return nil, err
 	}
