@@ -4,7 +4,7 @@ package sql
 import (
 	dbsql "database/sql"
 	"fmt"
-  "reflect"
+	"reflect"
 
 	pg "github.com/lib/pq"
 	"go.k6.io/k6/js/modules"
@@ -70,23 +70,23 @@ func (*SQL) Open(database string, connectionString string) (*dbsql.DB, error) {
 }
 
 func (sql *SQL) QueryArray(db *dbsql.DB, query string, args ...interface{}) ([]KeyValue, error) {
-  us := make([]interface{}, len(args))
-  for i, v := range args {
-    rt := reflect.TypeOf(v)
-    switch rt.Kind() {
-    case reflect.Array:
-      us[i] = pg.Array(v)
-    case reflect.Slice:
-      us[i] = pg.Array(v)
-    default:
-      us[i] = v
-    }
-  }
-  results, err := sql.Query(db, query, us...)
-  if err != nil {
-    return nil, err
-  }
-  return results, nil
+	us := make([]interface{}, len(args))
+	for i, v := range args {
+		rt := reflect.TypeOf(v)
+		switch rt.Kind() {
+		case reflect.Array:
+			us[i] = pg.Array(v)
+		case reflect.Slice:
+			us[i] = pg.Array(v)
+		default:
+			us[i] = v
+		}
+	}
+	results, err := sql.Query(db, query, us...)
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
 }
 
 // Query executes the provided query string against the database, while
